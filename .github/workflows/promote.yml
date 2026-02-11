@@ -1,0 +1,32 @@
+name: Auto Promote
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'  # รันทุก 2 ชั่วโมง
+  workflow_dispatch:  # สามารถรันด้วยมือได้
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install dependencies
+        run: |
+          pip install selenium
+      
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@latest
+      
+      - name: Run bot
+        env:
+          TUNWALAI_USERNAME: ${{ secrets.TUNWALAI_USERNAME }}
+          TUNWALAI_PASSWORD: ${{ secrets.TUNWALAI_PASSWORD }}
+        run: python bot.py
