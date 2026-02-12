@@ -12,7 +12,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementNotInteractableException
 
 # อ่าน credentials จาก environment variables
 USERNAME = os.getenv('TUNWALAI_USERNAME')
@@ -138,7 +138,16 @@ try:
     # คลิกปุ่ม
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] สถานะปุ่ม: พร้อมใช้งาน (สามารถกดได้)")
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกดปุ่มโปรโมต...")
-    promote_button.click()
+    
+    # ลองคลิกด้วย JavaScript ถ้าคลิกปกติไม่ได้
+    try:
+        # รอให้ปุ่มคลิกได้
+        wait.until(EC.element_to_be_clickable((By.ID, "btnPromote")))
+        promote_button.click()
+    except:
+        # ถ้าคลิกปกติไม่ได้ ใช้ JavaScript click
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ใช้ JavaScript click...")
+        driver.execute_script("arguments[0].click();", promote_button)
 
     # รอให้โปรโมตเสร็จ (15-40 วินาที)
     promote_delay = random.randint(15, 40)
