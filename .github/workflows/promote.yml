@@ -2,7 +2,7 @@ name: Auto Promote
 
 on:
   schedule:
-    - cron: '0 */2 * * *'  # รันทุก 2 ชั่วโมง
+    - cron: '0 */2 * * *'  # รันทุก 2 ชั่วโมง (delay สุ่มในโค้ด)
   workflow_dispatch:  # สามารถรันด้วยมือได้
 
 jobs:
