@@ -100,6 +100,16 @@ try:
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {login_delay} วินาที...")
         time.sleep(login_delay)
 
+        # ตรวจสอบว่า login สำเร็จหรือไม่ โดยเช็ค URL หรือหา element ที่แสดงว่า login แล้ว
+        current_url = driver.current_url
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] URL ปัจจุบัน: {current_url}")
+        
+        # ถ้ายังอยู่หน้า login แสดงว่า login ไม่สำเร็จ
+        if "ServiceLogin" in current_url or "login" in current_url.lower():
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Login ไม่สำเร็จ - ยังอยู่หน้า login")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กรุณาตรวจสอบ username/password ใน GitHub Secrets")
+            sys.exit(1)
+
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Login สำเร็จ")
 
         # นำทางไปหน้านิยาย
@@ -110,6 +120,12 @@ try:
         story_delay = random.randint(15, 40)
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {story_delay} วินาที...")
         time.sleep(story_delay)
+        
+        # ตรวจสอบว่าอยู่หน้านิยายจริงๆ
+        current_url = driver.current_url
+        if "story/838611" not in current_url:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: ไม่ได้อยู่หน้านิยาย - URL: {current_url}")
+        
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] โหลดหน้านิยายสำเร็จ")
     else:
         # ถ้า login อยู่แล้ว รอสักหน่อยเพื่อให้หน้าโหลดเสร็จ
@@ -153,6 +169,16 @@ try:
     promote_delay = random.randint(15, 40)
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {promote_delay} วินาที...")
     time.sleep(promote_delay)
+
+    # ตรวจสอบว่าโปรโมตสำเร็จหรือไม่ โดยเช็คว่าปุ่มกลับมาเป็น disabled
+    try:
+        promote_button_after = driver.find_element(By.ID, "btnPromote")
+        if promote_button_after.get_attribute("disabled"):
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ ยืนยัน: ปุ่มกลับมาเป็น disabled - โปรโมตสำเร็จแน่นอน!")
+        else:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: ปุ่มยังไม่ disabled - อาจโปรโมตไม่สำเร็จ")
+    except:
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ไม่สามารถตรวจสอบสถานะปุ่มหลังโปรโมต")
 
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] โปรโมตสำเร็จ!")
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] จบการทำงาน - สำเร็จ")
