@@ -56,8 +56,8 @@ try:
     
     # เช็คว่า login อยู่หรือไม่ โดยดูว่ามีปุ่มโปรโมตหรือไม่
     try:
-        # ใช้ WebDriverWait รอ element สูงสุด 30 วินาที (รอนานเฉพาะตอนหา element)
-        wait = WebDriverWait(driver, 30)
+        # ใช้ WebDriverWait รอ element สูงสุด 60 วินาที (1 นาที)
+        wait = WebDriverWait(driver, 60)
         promote_button_check = wait.until(EC.presence_of_element_located((By.ID, "btnPromote")))
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ตรวจพบว่า login อยู่แล้ว - ข้ามขั้นตอน login")
         already_logged_in = True
@@ -72,7 +72,7 @@ try:
         driver.get(LOGIN_URL)
 
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกรอก username...")
-        wait = WebDriverWait(driver, 30)
+        wait = WebDriverWait(driver, 60)
         username_field = wait.until(EC.presence_of_element_located((By.ID, "UserName")))
         username_field.send_keys(USERNAME)
 
@@ -127,46 +127,45 @@ try:
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {check_delay} วินาที...")
     time.sleep(check_delay)
     
-    # ใช้ WebDriverWait รอปุ่มโปรโมต (สูงสุด 30 วินาที)
-    wait = WebDriverWait(driver, 30)
+    # ใช้ WebDriverWait รอปุ่มโปรโมต (สูงสุด 60 วินาที)
+    wait = WebDriverWait(driver, 60)
     promote_button = wait.until(EC.presence_of_element_located((By.ID, "btnPromote")))
 
     # เช็คว่าปุ่มมี attribute "disabled" หรือไม่
     if promote_button.get_attribute("disabled"):
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] สถานะปุ่ม: อยู่ใน cooldown (ไม่สามารถกดได้)")
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] จบการทำงาน - ข้ามการโปรโมตครั้งนี้")
-        sys.exit(0)
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ข้ามการโปรโมตครั้งนี้")
+    else:
+        # คลิกปุ่ม
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] สถานะปุ่ม: พร้อมใช้งาน (สามารถกดได้)")
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกดปุ่มโปรโมต...")
+        
+        # ลองคลิกด้วย JavaScript ถ้าคลิกปกติไม่ได้
+        try:
+            # รอให้ปุ่มคลิกได้
+            wait.until(EC.element_to_be_clickable((By.ID, "btnPromote")))
+            promote_button.click()
+        except:
+            # ถ้าคลิกปกติไม่ได้ ใช้ JavaScript click
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ใช้ JavaScript click...")
+            driver.execute_script("arguments[0].click();", promote_button)
 
-    # คลิกปุ่ม
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] สถานะปุ่ม: พร้อมใช้งาน (สามารถกดได้)")
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกดปุ่มโปรโมต...")
-    
-    # ลองคลิกด้วย JavaScript ถ้าคลิกปกติไม่ได้
-    try:
-        # รอให้ปุ่มคลิกได้
-        wait.until(EC.element_to_be_clickable((By.ID, "btnPromote")))
-        promote_button.click()
-    except:
-        # ถ้าคลิกปกติไม่ได้ ใช้ JavaScript click
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ใช้ JavaScript click...")
-        driver.execute_script("arguments[0].click();", promote_button)
+        # รอสั้นๆ หลังกดปุ่ม (3-5 วินาที)
+        promote_delay = random.randint(3, 5)
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {promote_delay} วินาที...")
+        time.sleep(promote_delay)
 
-    # รอสั้นๆ หลังกดปุ่ม (3-5 วินาที)
-    promote_delay = random.randint(3, 5)
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {promote_delay} วินาที...")
-    time.sleep(promote_delay)
+        # ตรวจสอบว่าโปรโมตสำเร็จหรือไม่ โดยเช็คว่าปุ่มกลับมาเป็น disabled
+        try:
+            promote_button_after = driver.find_element(By.ID, "btnPromote")
+            if promote_button_after.get_attribute("disabled"):
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ ยืนยัน: ปุ่มกลับมาเป็น disabled - โปรโมตสำเร็จแน่นอน!")
+            else:
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: ปุ่มยังไม่ disabled - อาจโปรโมตไม่สำเร็จ")
+        except:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ไม่สามารถตรวจสอบสถานะปุ่มหลังโปรโมต")
 
-    # ตรวจสอบว่าโปรโมตสำเร็จหรือไม่ โดยเช็คว่าปุ่มกลับมาเป็น disabled
-    try:
-        promote_button_after = driver.find_element(By.ID, "btnPromote")
-        if promote_button_after.get_attribute("disabled"):
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ ยืนยัน: ปุ่มกลับมาเป็น disabled - โปรโมตสำเร็จแน่นอน!")
-        else:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: ปุ่มยังไม่ disabled - อาจโปรโมตไม่สำเร็จ")
-    except:
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ไม่สามารถตรวจสอบสถานะปุ่มหลังโปรโมต")
-
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] โปรโมตสำเร็จ!")
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] โปรโมตสำเร็จ!")
     
     # ========================================
     # ส่วนที่ 2: แก้ไข + บันทึก (2 รอบ) เพื่อขึ้น feed อัปเดตล่าสุด
@@ -187,7 +186,7 @@ try:
         
         # หาปุ่ม "บันทึก" และคลิก
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังหาปุ่มบันทึก...")
-        wait = WebDriverWait(driver, 30)
+        wait = WebDriverWait(driver, 60)
         
         try:
             # ลองหาปุ่มบันทึก
@@ -219,13 +218,30 @@ try:
                     driver.execute_script("arguments[0].click();", confirm_button)
                 
                 print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ กดปุ่มตกลงสำเร็จ!")
+                
+                # รอให้ redirect ออกจากหน้าแก้ไข (รอสูงสุด 60 วินาที)
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอให้ redirect ออกจากหน้าแก้ไข...")
+                try:
+                    # รอจนกว่า URL จะไม่มีคำว่า "/edit" (แสดงว่าออกจากหน้าแก้ไขแล้ว)
+                    WebDriverWait(driver, 60).until(
+                        lambda d: "/edit" not in d.current_url
+                    )
+                    current_url = driver.current_url
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ Redirect สำเร็จ - URL: {current_url}")
+                except TimeoutException:
+                    current_url = driver.current_url
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: Timeout - ยังอยู่หน้าแก้ไข - URL: {current_url}")
+                
+                # รอสั้นๆ หลัง redirect (2-3 วินาที)
+                post_redirect_delay = random.randint(2, 3)
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {post_redirect_delay} วินาที...")
+                time.sleep(post_redirect_delay)
+                
             except:
                 print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: ไม่พบปุ่มตกลง (อาจไม่มี popup)")
-            
-            # รอสั้นๆ หลังบันทึก (3-5 วินาที)
-            save_delay = random.randint(3, 5)
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {save_delay} วินาที...")
-            time.sleep(save_delay)
+                # ถ้าไม่มี popup ก็รอสั้นๆ
+                save_delay = random.randint(3, 5)
+                time.sleep(save_delay)
             
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ บันทึกรอบที่ {round_num} สำเร็จ!")
             

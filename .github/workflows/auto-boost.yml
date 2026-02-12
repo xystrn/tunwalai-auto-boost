@@ -1,8 +1,8 @@
-name: Auto Promote
+name: Auto Promote & Update
 
 on:
   schedule:
-    - cron: '0 */2 * * *'  # รันทุก 2 ชั่วโมง (delay สุ่มในโค้ด)
+    - cron: '*/30 * * * *'  # รันทุก 30 นาที
   workflow_dispatch:  # สามารถรันด้วยมือได้
 
 jobs:
