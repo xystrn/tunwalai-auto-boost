@@ -28,6 +28,7 @@ if not USERNAME or not PASSWORD:
 # URLs
 LOGIN_URL = "https://accounts.ookbee.com/ServiceLogin?AppCode=TUNWALAI_209&RedirectUrl=https%3A%2F%2Fwww.tunwalai.com%2FUserLogin%3FreturnUrl%3Dhttps%253A%252F%252Fwww.tunwalai.com%252F"
 STORY_URL = "https://www.tunwalai.com/story/838611"
+EDIT_URL = "https://www.tunwalai.com/story/838611/edit"
 
 driver = None
 
@@ -166,6 +167,76 @@ try:
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ไม่สามารถตรวจสอบสถานะปุ่มหลังโปรโมต")
 
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] โปรโมตสำเร็จ!")
+    
+    # ========================================
+    # ส่วนที่ 2: แก้ไข + บันทึก (2 รอบ) เพื่อขึ้น feed อัปเดตล่าสุด
+    # ========================================
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] เริ่มกระบวนการแก้ไข + บันทึก (2 รอบ)...")
+    
+    for round_num in range(1, 3):  # ทำ 2 รอบ
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] === รอบที่ {round_num} ===")
+        
+        # ไปหน้าแก้ไข
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังเข้าหน้าแก้ไข...")
+        driver.get(EDIT_URL)
+        
+        # รอสั้นๆ (3-5 วินาที)
+        edit_delay = random.randint(3, 5)
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {edit_delay} วินาที...")
+        time.sleep(edit_delay)
+        
+        # หาปุ่ม "บันทึก" และคลิก
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังหาปุ่มบันทึก...")
+        wait = WebDriverWait(driver, 30)
+        
+        try:
+            # ลองหาปุ่มบันทึก
+            save_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.btn-save")))
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกดปุ่มบันทึก...")
+            
+            # ลองคลิกปกติ ถ้าไม่ได้ใช้ JavaScript
+            try:
+                save_button.click()
+            except:
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ใช้ JavaScript click...")
+                driver.execute_script("arguments[0].click();", save_button)
+            
+            # รอสั้นๆ ให้ popup ขึ้นมา (2-3 วินาที)
+            popup_delay = random.randint(2, 3)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ popup {popup_delay} วินาที...")
+            time.sleep(popup_delay)
+            
+            # หาปุ่ม "ตกลง" ใน popup และคลิก
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังหาปุ่มตกลงใน popup...")
+            try:
+                confirm_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.btn-submit-form")))
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกดปุ่มตกลง...")
+                
+                try:
+                    confirm_button.click()
+                except:
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ใช้ JavaScript click...")
+                    driver.execute_script("arguments[0].click();", confirm_button)
+                
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ กดปุ่มตกลงสำเร็จ!")
+            except:
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: ไม่พบปุ่มตกลง (อาจไม่มี popup)")
+            
+            # รอสั้นๆ หลังบันทึก (3-5 วินาที)
+            save_delay = random.randint(3, 5)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {save_delay} วินาที...")
+            time.sleep(save_delay)
+            
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ บันทึกรอบที่ {round_num} สำเร็จ!")
+            
+        except Exception as e:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: ไม่สามารถกดปุ่มบันทึกได้ - {e}")
+            # ถ้ารอบแรกล้มเหลว ยังพอทำรอบสองได้
+            if round_num == 2:
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: รอบที่ 2 ล้มเหลว แต่รอบที่ 1 อาจสำเร็จแล้ว")
+    
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ เสร็จสิ้นการแก้ไข + บันทึก 2 รอบ!")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] นิยายควรขึ้น feed อัปเดตล่าสุดแล้ว")
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] จบการทำงาน - สำเร็จ")
     sys.exit(0)
 
