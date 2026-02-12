@@ -2,7 +2,7 @@ name: Auto Promote & Update
 
 on:
   schedule:
-    - cron: '19 * * * *'
+    - cron: '49 * * * *'
   workflow_dispatch:
 
 jobs:
