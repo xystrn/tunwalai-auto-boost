@@ -19,11 +19,13 @@ jobs:
         with:
           python-version: '3.9'
       
-      - name: Install dependencies
-        run: pip install selenium
+      - name: Set up Chrome (Stable)
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
       
-      - name: Set up Chrome
-        uses: browser-actions/setup-chrome@latest
+      - name: Install dependencies
+        run: pip install -r requirements.txt
       
       - name: Run bot
         env:

@@ -8,9 +8,8 @@ import time
 import random
 import traceback
 from datetime import datetime
-from selenium import webdriver
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
@@ -128,14 +127,14 @@ def process_story(driver, story_id, story_index, total_stories):
 try:
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Starting Tunwalai Auto Boost Bot")
     
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Setting up Chrome headless mode...")
-    chrome_options = Options()
-    chrome_options.add_argument('--headless')
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Setting up Chrome with undetected-chromedriver...")
+    chrome_options = uc.ChromeOptions()
+    chrome_options.add_argument('--headless=new')
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
 
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Opening Chrome browser...")
-    driver = webdriver.Chrome(options=chrome_options)
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Opening Chrome browser (undetected mode)...")
+    driver = uc.Chrome(options=chrome_options, use_subprocess=False)
     driver.implicitly_wait(10)
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Browser opened successfully")
 
