@@ -2,13 +2,13 @@ name: Auto Promote & Update
 
 on:
   schedule:
-    - cron: '19 * * * *'  # รันทุกชั่วโมงตรงนาทีที่ 19
-  workflow_dispatch:  # สามารถรันด้วยมือได้
+    - cron: '19 * * * *'
+  workflow_dispatch:
 
 jobs:
   promote:
     runs-on: ubuntu-latest
-    timeout-minutes: 10  # ถ้าเกิน 10 นาที ให้หยุดทันที (ป้องกันเสียเวลาเปล่าๆ)
+    timeout-minutes: 15
     
     steps:
       - name: Checkout code
@@ -20,8 +20,7 @@ jobs:
           python-version: '3.9'
       
       - name: Install dependencies
-        run: |
-          pip install selenium
+        run: pip install selenium
       
       - name: Set up Chrome
         uses: browser-actions/setup-chrome@latest
@@ -30,4 +29,6 @@ jobs:
         env:
           TUNWALAI_USERNAME: ${{ secrets.TUNWALAI_USERNAME }}
           TUNWALAI_PASSWORD: ${{ secrets.TUNWALAI_PASSWORD }}
+          STORY_IDS: ${{ vars.STORY_IDS }}
         run: python bot.py
+

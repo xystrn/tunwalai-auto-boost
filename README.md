@@ -1,59 +1,90 @@
 # Tunwalai Auto Boost
 
-Bot อัตโนมัติสำหรับ Boost นิยายบน Tunwalai ทุก 1 ชั่วโมง ผ่าน GitHub Actions (ฟรี)
+Automated bot to boost stories on Tunwalai every hour via GitHub Actions (free).
 
-## Bot ทำอะไร?
+## What does it do?
 
-1. **กดปุ่ม Promote** - นิยายขึ้น "นิยายที่กำลังโปรโมต"
-2. **แก้ไข + บันทึก 2 รอบ** - นิยายขึ้น feed "อัปเดตล่าสุด"
+1. **Click Promote button** - Story appears in "Promoted Stories"
+2. **Edit + Save twice** - Story appears in "Latest Updates" feed
+3. **Supports multiple stories** - Login once, process all stories
 
-## วิธีใช้
+## Setup
 
-### 1. Fork repo นี้
-คลิกปุ่ม "Fork" ที่มุมขวาบน
+### 1. Fork this repo
+Click the "Fork" button at the top right
 
-### 2. ตั้งค่า Secrets
-1. ไปที่ **Settings** → **Secrets and variables** → **Actions**
-2. คลิก **New repository secret** แล้วสร้าง 2 ตัว:
-   - `TUNWALAI_USERNAME` = email ที่ใช้ login
-   - `TUNWALAI_PASSWORD` = password
+### 2. Configure Secrets
+1. Go to **Settings** → **Secrets and variables** → **Actions**
+2. Go to **Secrets** tab → **New repository secret**
+3. Create 2 secrets:
+   - `TUNWALAI_USERNAME` = your login email
+   - `TUNWALAI_PASSWORD` = your password
 
-### 3. เปิดใช้งาน Actions
-1. ไปที่แท็บ **Actions**
-2. คลิก **I understand my workflows, go ahead and enable them**
+### 3. Configure Story IDs
+1. Go to **Variables** tab → **New repository variable**
+2. Create:
+   - Name: `STORY_IDS`
+   - Value: your story ID(s)
+     - Single story: `838611`
+     - Multiple stories: `838611,123456,789012` (comma-separated, no spaces)
+     - Supports URLs: `https://www.tunwalai.com/story/838611,https://www.tunwalai.com/story/123456`
+     - If not set, defaults to `838611`
 
-### 4. ทดสอบ
-1. ไปที่ **Actions** → **Auto Promote & Update**
-2. คลิก **Run workflow** → **Run workflow**
-3. ดู log ว่าทำงานสำเร็จหรือไม่
+**Why use Variable?** So you can see which stories are being processed in the logs (safe for private repos).
 
-## ตารางเวลา
+### 4. Enable Actions
+1. Go to **Actions** tab
+2. Click **I understand my workflows, go ahead and enable them**
 
-รันทุก 1 ชั่วโมง (24 ครั้ง/วัน)
+### 5. Test
+1. Go to **Actions** → **Auto Promote & Update**
+2. Click **Run workflow** → **Run workflow**
+3. Check the logs to verify it works
 
-## การใช้ทรัพยากร
+## Schedule
 
-- GitHub Actions Free: 2,000 นาที/เดือน
-- Bot ใช้: ~120 นาที/เดือน (6% ของ quota)
-- แต่ละครั้งใช้เวลา: 2-3 นาที
+Default: Runs every hour at minute 19 (00:19, 01:19, 02:19, etc.)
 
-## เปลี่ยนความถี่
+Check `.github/workflows/auto-boost.yml` for the actual schedule configured in your repo.
 
-แก้ไข `.github/workflows/auto-boost.yml`:
+## Change Schedule
+
+Edit `.github/workflows/auto-boost.yml`:
 
 ```yaml
 schedule:
-  - cron: '19 * * * *'  # รันทุกชั่วโมงตรงนาทีที่ 19
+  - cron: '19 * * * *'  # Every hour at minute 19
 ```
 
-ตัวอย่าง:
-- ทุก 2 ชั่วโมง: `'0 */2 * * *'`
-- ทุก 30 นาที: `'*/30 * * * *'`
+Examples:
+- Every 2 hours: `'0 */2 * * *'`
+- Every 30 minutes: `'*/30 * * * *'`
+- Specific times: `'0 9,12,15,18 * * *'` (9am, 12pm, 3pm, 6pm)
 
-## แก้ปัญหา
+**Note**: If you fork this repo multiple times for different accounts, change the cron schedule in each fork to avoid running at the same time (e.g., use minute 19 for account 1, minute 49 for account 2).
 
-**ดู Log**: Actions → คลิก workflow run → promote → Run bot
+## Troubleshooting
 
-**Login ไม่สำเร็จ**: ตรวจสอบ username/password ใน Secrets
+**View Logs**: Actions → Click workflow run → promote → Run bot
 
-**Element not found**: เว็บเปลี่ยน HTML → แก้ selector ใน `bot.py`
+**Login Failed**: Check username/password in Secrets
+
+**Element Not Found**: Website HTML changed → Update selectors in `bot.py`
+
+**Timeout**: Increase `timeout-minutes` in workflow file if you have many stories
+
+## How It Works
+
+1. **Login once** - Checks if already logged in, otherwise logs in
+2. **For each story**:
+   - Click Promote button (if available)
+   - Edit + Save (round 1)
+   - Edit + Save (round 2)
+3. **Summary** - Shows success/failure count
+
+## Notes
+
+- Login is shared across all stories (efficient)
+- If one story fails, others continue processing
+- Random delays (1-4s) make it look natural
+- Works in headless Chrome (no GUI needed)

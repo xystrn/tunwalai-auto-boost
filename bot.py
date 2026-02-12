@@ -1,5 +1,6 @@
 # Tunwalai Auto Boost Bot
-# สคริปต์สำหรับกดปุ่ม Boost อัตโนมัติ + แก้ไขบันทึกเพื่อขึ้น feed อัปเดตล่าสุด
+# Auto-promote stories and trigger feed updates
+# Supports multiple stories with single login
 
 import os
 import sys
@@ -12,251 +13,220 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementNotInteractableException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
-# อ่าน credentials จาก environment variables
 USERNAME = os.getenv('TUNWALAI_USERNAME')
 PASSWORD = os.getenv('TUNWALAI_PASSWORD')
+STORY_IDS_INPUT = os.getenv('STORY_IDS', '838611')
 
-# เช็คว่ามีค่าหรือไม่
 if not USERNAME or not PASSWORD:
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: ไม่พบ TUNWALAI_USERNAME หรือ TUNWALAI_PASSWORD")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Missing TUNWALAI_USERNAME or TUNWALAI_PASSWORD")
     sys.exit(1)
 
+# Parse STORY_IDS - supports IDs or URLs
+story_ids_raw = [s.strip() for s in STORY_IDS_INPUT.split(',')]
+STORY_IDS = []
 
+for story_input in story_ids_raw:
+    if 'tunwalai.com/story/' in story_input:
+        story_id = story_input.split('tunwalai.com/story/')[-1].split('/')[0].split('?')[0]
+        STORY_IDS.append(story_id)
+    else:
+        STORY_IDS.append(story_input.strip())
 
-# URLs
+print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Stories to boost: {len(STORY_IDS)}")
+print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Story IDs: {', '.join(STORY_IDS)}")
+
 LOGIN_URL = "https://accounts.ookbee.com/ServiceLogin?AppCode=TUNWALAI_209&RedirectUrl=https%3A%2F%2Fwww.tunwalai.com%2FUserLogin%3FreturnUrl%3Dhttps%253A%252F%252Fwww.tunwalai.com%252F"
-STORY_URL = "https://www.tunwalai.com/story/838611"
-EDIT_URL = "https://www.tunwalai.com/story/838611/edit"
 
 driver = None
 
-try:
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] เริ่มต้น Tunwalai Auto Boost Bot")
+def process_story(driver, story_id, story_index, total_stories):
+    """Process one story: Promote + Edit/Save twice"""
+    print(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ========================================")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Processing story {story_index}/{total_stories}: ID {story_id}")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ========================================")
     
-    # ตั้งค่า Chrome options
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังตั้งค่า Chrome headless mode...")
+    STORY_URL = f"https://www.tunwalai.com/story/{story_id}"
+    EDIT_URL = f"https://www.tunwalai.com/story/{story_id}/edit"
+    
+    try:
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Navigating to story page...")
+        driver.get(STORY_URL)
+        time.sleep(random.randint(1, 3))
+
+        # Step 1: Click Promote button
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Checking Promote button...")
+        time.sleep(random.randint(2, 4))
+        
+        wait = WebDriverWait(driver, 30)
+        promote_button = wait.until(EC.presence_of_element_located((By.ID, "btnPromote")))
+
+        if promote_button.get_attribute("disabled"):
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Promote button on cooldown - skipping")
+        else:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Clicking Promote button...")
+            driver.execute_script("arguments[0].click();", promote_button)
+            time.sleep(random.randint(2, 4))
+
+            try:
+                promote_button_after = driver.find_element(By.ID, "btnPromote")
+                if promote_button_after.get_attribute("disabled"):
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ Promote successful!")
+                else:
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: Promote may have failed")
+            except:
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Cannot verify Promote status")
+        
+        # Step 2: Edit + Save twice
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Starting Edit + Save process (2 rounds)...")
+        
+        for round_num in range(1, 3):
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] --- Round {round_num} ---")
+            
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Navigating to edit page...")
+            driver.get(EDIT_URL)
+            time.sleep(random.randint(2, 4))
+            
+            try:
+                save_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button.btn-save")))
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Clicking Save button...")
+                driver.execute_script("arguments[0].click();", save_button)
+                time.sleep(random.randint(1, 2))
+                
+                try:
+                    confirm_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button.btn-submit-form")))
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Clicking Confirm button...")
+                    driver.execute_script("arguments[0].click();", confirm_button)
+                    
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Waiting for redirect...")
+                    try:
+                        WebDriverWait(driver, 30).until(lambda d: "/edit" not in d.current_url)
+                        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ Redirect successful")
+                    except TimeoutException:
+                        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: Timeout - still on edit page")
+                    
+                    time.sleep(random.randint(1, 2))
+                    
+                except:
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: Confirm button not found")
+                    time.sleep(2)
+                
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ Round {round_num} completed!")
+                
+            except Exception as e:
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Cannot click Save button - {e}")
+        
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ Story {story_index}/{total_stories} completed: ID {story_id}")
+        return True
+        
+    except Exception as e:
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Failed to process story ID {story_id} - {e}")
+        traceback.print_exc()
+        return False
+
+try:
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Starting Tunwalai Auto Boost Bot")
+    
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Setting up Chrome headless mode...")
     chrome_options = Options()
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
 
-    # สร้าง WebDriver instance
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังเปิด Chrome browser...")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Opening Chrome browser...")
     driver = webdriver.Chrome(options=chrome_options)
     driver.implicitly_wait(10)
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] เปิด browser สำเร็จ")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Browser opened successfully")
 
-    # เริ่มต้นการ login
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังตรวจสอบสถานะ login...")
-
-    # ไปที่หน้านิยายก่อนเพื่อเช็คว่า login อยู่หรือไม่
-    driver.get(STORY_URL)
+    # Login once (shared session for all stories)
+    print(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ========================================")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Login Process")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ========================================")
     
-    # เช็คว่า login อยู่หรือไม่ โดยดูว่ามีปุ่มโปรโมตหรือไม่
+    first_story_url = f"https://www.tunwalai.com/story/{STORY_IDS[0]}"
+    driver.get(first_story_url)
+    
     try:
-        # ใช้ WebDriverWait รอ element สูงสุด 60 วินาที (1 นาที)
         wait = WebDriverWait(driver, 60)
         promote_button_check = wait.until(EC.presence_of_element_located((By.ID, "btnPromote")))
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ตรวจพบว่า login อยู่แล้ว - ข้ามขั้นตอน login")
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ Already logged in - skipping login")
         already_logged_in = True
     except (TimeoutException, NoSuchElementException):
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ยังไม่ได้ login - จะทำการ login")
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Not logged in - proceeding to login")
         already_logged_in = False
     
-    # ถ้ายังไม่ได้ login ให้ไป login
     if not already_logged_in:
         try:
-            # Navigate ไปยัง LOGIN_URL
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังเข้าหน้า login...")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Navigating to login page...")
             driver.get(LOGIN_URL)
 
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกรอก username...")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Entering username...")
             wait = WebDriverWait(driver, 60)
             username_field = wait.until(EC.presence_of_element_located((By.ID, "UserName")))
             username_field.send_keys(USERNAME)
 
-            # หา element password และกรอกค่า
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกรอก password...")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Entering password...")
             password_field = wait.until(EC.presence_of_element_located((By.ID, "Password")))
             password_field.send_keys(PASSWORD)
 
-            # หาปุ่ม submit และคลิก
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลัง submit form...")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Submitting form...")
             submit_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[type='submit']")))
             driver.execute_script("arguments[0].click();", submit_button)
 
-            # รอสั้นๆ หลัง submit (3-5 วินาที)
-            login_delay = random.randint(3, 5)
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {login_delay} วินาที...")
-            time.sleep(login_delay)
+            time.sleep(random.randint(3, 5))
 
-            # ตรวจสอบว่า login สำเร็จหรือไม่ โดยเช็ค URL หรือหา element ที่แสดงว่า login แล้ว
             current_url = driver.current_url
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] URL ปัจจุบัน: {current_url}")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Current URL: {current_url}")
             
-            # ถ้ายังอยู่หน้า login แสดงว่า login ไม่สำเร็จ
             if "ServiceLogin" in current_url or "login" in current_url.lower():
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Login ไม่สำเร็จ - ยังอยู่หน้า login")
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กรุณาตรวจสอบ username/password ใน GitHub Secrets")
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Login failed")
                 sys.exit(1)
 
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Login สำเร็จ")
-
-            # นำทางไปหน้านิยาย
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังเข้าหน้านิยาย...")
-            driver.get(STORY_URL)
-
-            # ตรวจสอบว่าอยู่หน้านิยายจริงๆ
-            current_url = driver.current_url
-            if "story/838611" not in current_url:
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: ไม่ได้อยู่หน้านิยาย - URL: {current_url}")
-            
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] โหลดหน้านิยายสำเร็จ")
-            
-        except TimeoutException as e:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Login timeout - หน้า login อาจเปลี่ยนแปลง")
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รายละเอียด: {e}")
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ไม่สามารถทำงานต่อได้ - ต้อง login ก่อน")
-            sys.exit(1)
-        except Exception as e:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: เกิดข้อผิดพลาดระหว่าง login - {e}")
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ไม่สามารถทำงานต่อได้ - ต้อง login ก่อน")
-            sys.exit(1)
-    else:
-        # ถ้า login อยู่แล้ว รอสั้นๆ (1-5 วินาที)
-        story_delay = random.randint(1, 5)
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {story_delay} วินาที...")
-        time.sleep(story_delay)
-
-    # หาปุ่ม Promote
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังตรวจสอบสถานะปุ่ม Promote...")
-    
-    # รอสั้นๆ (3-5 วินาที) เพื่อให้ดูเป็นธรรมชาติ
-    check_delay = random.randint(3, 5)
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {check_delay} วินาที...")
-    time.sleep(check_delay)
-    
-    # ใช้ WebDriverWait รอปุ่ม Promote (สูงสุด 60 วินาที)
-    wait = WebDriverWait(driver, 60)
-    promote_button = wait.until(EC.presence_of_element_located((By.ID, "btnPromote")))
-
-    # เช็คว่าปุ่มมี attribute "disabled" หรือไม่
-    if promote_button.get_attribute("disabled"):
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] สถานะปุ่ม: อยู่ใน cooldown (ไม่สามารถกดได้)")
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ข้ามการ Promote ครั้งนี้")
-    else:
-        # คลิกปุ่มด้วย JavaScript (เร็วและแน่นอน)
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] สถานะปุ่ม: พร้อมใช้งาน (สามารถกดได้)")
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกดปุ่ม Promote...")
-        driver.execute_script("arguments[0].click();", promote_button)
-
-        # รอสั้นๆ หลังกดปุ่ม (3-5 วินาที)
-        promote_delay = random.randint(3, 5)
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {promote_delay} วินาที...")
-        time.sleep(promote_delay)
-
-        # ตรวจสอบว่า Promote สำเร็จหรือไม่ โดยเช็คว่าปุ่มกลับมาเป็น disabled
-        try:
-            promote_button_after = driver.find_element(By.ID, "btnPromote")
-            if promote_button_after.get_attribute("disabled"):
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ ยืนยัน: ปุ่มกลับมาเป็น disabled - Promote สำเร็จแน่นอน!")
-            else:
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: ปุ่มยังไม่ disabled - อาจ Promote ไม่สำเร็จ")
-        except:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ไม่สามารถตรวจสอบสถานะปุ่มหลัง Promote")
-
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Promote สำเร็จ!")
-    
-    # ========================================
-    # ส่วนที่ 2: แก้ไข + บันทึก (2 รอบ) เพื่อขึ้น feed "อัปเดตล่าสุด"
-    # ========================================
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] เริ่มกระบวนการแก้ไข + บันทึก (2 รอบ) เพื่อขึ้น feed อัปเดตล่าสุด...")
-    
-    for round_num in range(1, 3):  # ทำ 2 รอบ
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] === รอบที่ {round_num} ===")
-        
-        # ไปหน้าแก้ไข
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังเข้าหน้าแก้ไข...")
-        driver.get(EDIT_URL)
-        
-        # รอสั้นๆ (3-5 วินาที)
-        edit_delay = random.randint(3, 5)
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {edit_delay} วินาที...")
-        time.sleep(edit_delay)
-        
-        # หาปุ่ม "บันทึก" และคลิก
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังหาปุ่มบันทึก...")
-        wait = WebDriverWait(driver, 60)
-        
-        try:
-            # หาปุ่มบันทึก
-            save_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button.btn-save")))
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกดปุ่มบันทึก...")
-            driver.execute_script("arguments[0].click();", save_button)
-            
-            # รอสั้นๆ ให้ popup ขึ้นมา (2-3 วินาที)
-            popup_delay = random.randint(2, 3)
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ popup {popup_delay} วินาที...")
-            time.sleep(popup_delay)
-            
-            # หาปุ่ม "ตกลง" ใน popup และคลิก
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังหาปุ่มตกลงใน popup...")
-            try:
-                confirm_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button.btn-submit-form")))
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกดปุ่มตกลง...")
-                driver.execute_script("arguments[0].click();", confirm_button)
-                
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ กดปุ่มตกลงสำเร็จ!")
-                
-                # รอให้ redirect ออกจากหน้าแก้ไข (รอสูงสุด 60 วินาที)
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอให้ redirect ออกจากหน้าแก้ไข...")
-                try:
-                    # รอจนกว่า URL จะไม่มีคำว่า "/edit" (แสดงว่าออกจากหน้าแก้ไขแล้ว)
-                    WebDriverWait(driver, 60).until(
-                        lambda d: "/edit" not in d.current_url
-                    )
-                    current_url = driver.current_url
-                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ Redirect สำเร็จ - URL: {current_url}")
-                except TimeoutException:
-                    current_url = driver.current_url
-                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: Timeout - ยังอยู่หน้าแก้ไข - URL: {current_url}")
-                
-                # รอสั้นๆ หลัง redirect (2-3 วินาที)
-                post_redirect_delay = random.randint(2, 3)
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {post_redirect_delay} วินาที...")
-                time.sleep(post_redirect_delay)
-                
-            except:
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: ไม่พบปุ่มตกลง (อาจไม่มี popup)")
-                # ถ้าไม่มี popup ก็รอสั้นๆ
-                save_delay = random.randint(3, 5)
-                time.sleep(save_delay)
-            
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ บันทึกรอบที่ {round_num} สำเร็จ!")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ Login successful")
             
         except Exception as e:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: ไม่สามารถกดปุ่มบันทึกได้ - {e}")
-            # ถ้ารอบแรกล้มเหลว ยังพอทำรอบสองได้
-            if round_num == 2:
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: รอบที่ 2 ล้มเหลว แต่รอบที่ 1 อาจสำเร็จแล้ว")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Login error - {e}")
+            sys.exit(1)
+
+    # Process all stories
+    print(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ========================================")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Processing All Stories")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ========================================")
     
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ เสร็จสิ้นกระบวนการ Boost ทั้งหมด (Promote + Edit + Save 2 รอบ)!")
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] นิยายควรขึ้น feed อัปเดตล่าสุดแล้ว")
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] จบการทำงาน - สำเร็จ")
-    sys.exit(0)
+    success_count = 0
+    fail_count = 0
+    
+    for index, story_id in enumerate(STORY_IDS, start=1):
+        result = process_story(driver, story_id, index, len(STORY_IDS))
+        if result:
+            success_count += 1
+        else:
+            fail_count += 1
+        
+        if index < len(STORY_IDS):
+            between_delay = random.randint(2, 4)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Waiting {between_delay}s before next story...")
+            time.sleep(between_delay)
+    
+    # Summary
+    print(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ========================================")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Summary")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ========================================")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Total: {len(STORY_IDS)} stories")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Success: {success_count} stories")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Failed: {fail_count} stories")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ Completed")
+    
+    sys.exit(0 if fail_count == 0 else 1)
 
 except Exception as e:
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: เกิดข้อผิดพลาด - {e}")
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Stack trace:")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: {e}")
     traceback.print_exc()
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] จบการทำงาน - ล้มเหลว")
     sys.exit(1)
 
 finally:
-    # ปิด browser
     if driver:
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังปิด browser...")
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Closing browser...")
         driver.quit()
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ปิด browser แล้ว")
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Browser closed")
