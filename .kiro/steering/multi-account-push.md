@@ -4,40 +4,63 @@ inclusion: auto
 
 # Multi-Account Push Strategy
 
-This repository pushes to two GitHub accounts with different cron schedules.
+This repository maintains code on two GitHub accounts with different GitHub Actions cron schedules.
 
-## Accounts
+## Accounts & Cron Schedules
 
-1. **shamizen** (origin) - Cron: `'19 * * * *'`
-2. **xystrn** (secondary) - Cron: `'49 * * * *'`
+1. **shamizen** (origin remote) - Cron: `'19 * * * *'` (runs at minute 19 every hour)
+2. **xystrn** (xystrn remote) - Cron: `'49 * * * *'` (runs at minute 49 every hour)
 
-## Push Commands
+## Default Push Behavior
 
-### Push to xystrn
+**When user says "push" without specifying account:**
+- Push to BOTH accounts sequentially
+- Follow the complete workflow below
 
-**Trigger:** "push to xystrn" or "push xystrn"
+## Complete Push Workflow (Both Accounts)
 
-**Steps:**
-1. Use `strReplace` on `.github/workflows/auto-boost.yml`:
-   - oldStr: `cron: '19 * * * *'`
-   - newStr: `cron: '49 * * * *'`
-2. Commit: "Update cron for xystrn"
-3. Push to xystrn remote
-4. Use `strReplace` to restore:
-   - oldStr: `cron: '49 * * * *'`
-   - newStr: `cron: '19 * * * *'`
-5. Commit: "Restore cron to 19"
+### Step 1: Push to shamizen (origin)
+1. Ensure `.github/workflows/auto-boost.yml` has cron: `'19 * * * *'`
+2. Stage all changes: `git add -A`
+3. Commit if there are changes
+4. Push to origin: `git push origin main`
 
-### Push to shamizen
+### Step 2: Push to xystrn
+1. Change `.github/workflows/auto-boost.yml` cron to `'49 * * * *'` using `strReplace`
+2. Stage the workflow file: `git add .github/workflows/auto-boost.yml`
+3. Commit: "Update cron schedule to 49 minutes for xystrn account"
+4. Push to xystrn: `git push xystrn main` (use `--force` if needed)
 
+### Step 3: Restore local state
+1. Change cron back to `'19 * * * *'` using `strReplace`
+2. Commit: "Restore cron to 19 minutes for shamizen"
+3. This keeps local repo in sync with shamizen (origin)
+
+## Single Account Push
+
+### Push to shamizen only
 **Trigger:** "push to shamizen", "push shamizen", "push to origin"
+- Follow Step 1 only
 
-**Steps:**
-1. Verify cron is `'19 * * * *'` in `.github/workflows/auto-boost.yml`
-2. Push to origin remote
+### Push to xystrn only
+**Trigger:** "push to xystrn", "push xystrn"
+- Follow Steps 2 and 3 only
 
-## Important
+## Critical Rules
 
-- Use `strReplace` tool, NOT sed or command line text editing
-- Local repo always keeps cron at `'19 * * * *'`
-- Only temporarily change to `'49 * * * *'` when pushing to xystrn
+- ALWAYS use `strReplace` tool for editing `.github/workflows/auto-boost.yml`
+- NEVER use sed, awk, or command-line text editing
+- Local repository should always maintain cron at `'19 * * * *'` (shamizen's schedule)
+- Only temporarily change to `'49 * * * *'` when pushing to xystrn, then restore immediately
+
+## Example strReplace Usage
+
+```
+To change to xystrn cron:
+oldStr: "    - cron: '19 * * * *'"
+newStr: "    - cron: '49 * * * *'"
+
+To restore to shamizen cron:
+oldStr: "    - cron: '49 * * * *'"
+newStr: "    - cron: '19 * * * *'"
+```
