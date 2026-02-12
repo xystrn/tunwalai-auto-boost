@@ -2,7 +2,7 @@ name: Auto Promote & Update
 
 on:
   schedule:
-    - cron: '49 * * * *'
+    - cron: '19 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -22,7 +22,8 @@ jobs:
       - name: Set up Chrome
         uses: browser-actions/setup-chrome@v1
         with:
-          chrome-version: 144
+          chrome-version: stable
+          install-chromedriver: true
       
       - name: Install dependencies
         run: pip install -r requirements.txt
