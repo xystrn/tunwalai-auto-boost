@@ -53,15 +53,10 @@ try:
     # ไปที่หน้านิยายก่อนเพื่อเช็คว่า login อยู่หรือไม่
     driver.get(STORY_URL)
     
-    # รอให้หน้าโหลด (15-30 วินาที)
-    initial_delay = random.randint(15, 30)
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอหน้าเว็บโหลด {initial_delay} วินาที...")
-    time.sleep(initial_delay)
-    
     # เช็คว่า login อยู่หรือไม่ โดยดูว่ามีปุ่มโปรโมตหรือไม่
     try:
-        # ใช้ WebDriverWait รอ element สูงสุด 20 วินาที
-        wait = WebDriverWait(driver, 20)
+        # ใช้ WebDriverWait รอ element สูงสุด 30 วินาที (รอนานเฉพาะตอนหา element)
+        wait = WebDriverWait(driver, 30)
         promote_button_check = wait.until(EC.presence_of_element_located((By.ID, "btnPromote")))
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ตรวจพบว่า login อยู่แล้ว - ข้ามขั้นตอน login")
         already_logged_in = True
@@ -74,14 +69,9 @@ try:
         # Navigate ไปยัง LOGIN_URL
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังเข้าหน้า login...")
         driver.get(LOGIN_URL)
-        
-        # รอหน้า login โหลด (15-25 วินาที)
-        login_page_delay = random.randint(15, 25)
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอหน้า login โหลด {login_page_delay} วินาที...")
-        time.sleep(login_page_delay)
 
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกรอก username...")
-        wait = WebDriverWait(driver, 20)
+        wait = WebDriverWait(driver, 30)
         username_field = wait.until(EC.presence_of_element_located((By.ID, "UserName")))
         username_field.send_keys(USERNAME)
 
@@ -95,8 +85,8 @@ try:
         submit_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']")))
         submit_button.click()
 
-        # รอให้ login เสร็จ (15-30 วินาที เพื่อรอหน้าเว็บโหลด)
-        login_delay = random.randint(15, 30)
+        # รอสั้นๆ หลัง submit (3-5 วินาที)
+        login_delay = random.randint(3, 5)
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {login_delay} วินาที...")
         time.sleep(login_delay)
 
@@ -116,11 +106,6 @@ try:
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังเข้าหน้านิยาย...")
         driver.get(STORY_URL)
 
-        # รอให้หน้านิยายโหลด (15-40 วินาที)
-        story_delay = random.randint(15, 40)
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {story_delay} วินาที...")
-        time.sleep(story_delay)
-        
         # ตรวจสอบว่าอยู่หน้านิยายจริงๆ
         current_url = driver.current_url
         if "story/838611" not in current_url:
@@ -128,21 +113,21 @@ try:
         
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] โหลดหน้านิยายสำเร็จ")
     else:
-        # ถ้า login อยู่แล้ว รอสักหน่อยเพื่อให้หน้าโหลดเสร็จ
-        story_delay = random.randint(15, 25)
+        # ถ้า login อยู่แล้ว รอสั้นๆ (3-5 วินาที)
+        story_delay = random.randint(3, 5)
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {story_delay} วินาที...")
         time.sleep(story_delay)
 
     # หาปุ่มโปรโมต
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังตรวจสอบสถานะปุ่มโปรโมต...")
     
-    # รอสุ่มก่อนหาปุ่ม (15-30 วินาที) เพื่อให้ดูเป็นธรรมชาติ
-    check_delay = random.randint(15, 30)
+    # รอสั้นๆ (3-5 วินาที) เพื่อให้ดูเป็นธรรมชาติ
+    check_delay = random.randint(3, 5)
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {check_delay} วินาที...")
     time.sleep(check_delay)
     
-    # ใช้ WebDriverWait รอปุ่มโปรโมต
-    wait = WebDriverWait(driver, 20)
+    # ใช้ WebDriverWait รอปุ่มโปรโมต (สูงสุด 30 วินาที)
+    wait = WebDriverWait(driver, 30)
     promote_button = wait.until(EC.presence_of_element_located((By.ID, "btnPromote")))
 
     # เช็คว่าปุ่มมี attribute "disabled" หรือไม่
@@ -165,8 +150,8 @@ try:
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ใช้ JavaScript click...")
         driver.execute_script("arguments[0].click();", promote_button)
 
-    # รอให้โปรโมตเสร็จ (15-40 วินาที)
-    promote_delay = random.randint(15, 40)
+    # รอสั้นๆ หลังกดปุ่ม (3-5 วินาที)
+    promote_delay = random.randint(3, 5)
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {promote_delay} วินาที...")
     time.sleep(promote_delay)
 
