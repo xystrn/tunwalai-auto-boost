@@ -1,114 +1,59 @@
 # Tunwalai Auto Boost
 
-Bot อัตโนมัติสำหรับโปรโมตนิยายบน Tunwalai ทุก 30 นาที ผ่าน GitHub Actions
+Bot อัตโนมัติสำหรับ Boost นิยายบน Tunwalai ทุก 1 ชั่วโมง ผ่าน GitHub Actions (ฟรี)
 
-## ฟีเจอร์
+## Bot ทำอะไร?
 
-Bot ทำงาน 2 อย่างแยกกัน:
+1. **กดปุ่ม Promote** - นิยายขึ้น "นิยายที่กำลังโปรโมต"
+2. **แก้ไข + บันทึก 2 รอบ** - นิยายขึ้น feed "อัปเดตล่าสุด"
 
-1. **กดปุ่มโปรโมต** - นิยายจะแสดงใน "นิยายที่กำลังโปรโมต"
-2. **แก้ไข + บันทึก (2 รอบ)** - นิยายจะขึ้น feed "อัปเดตล่าสุด"
-
-หมายเหตุ: ถ้าปุ่มโปรโมตอยู่ใน cooldown จะข้ามไป แต่ยังทำแก้ไข+บันทึกต่อ
-
-## การตั้งค่า
+## วิธีใช้
 
 ### 1. Fork repo นี้
-
 คลิกปุ่ม "Fork" ที่มุมขวาบน
 
-### 2. ตั้งค่า GitHub Secrets
-
+### 2. ตั้งค่า Secrets
 1. ไปที่ **Settings** → **Secrets and variables** → **Actions**
-2. คลิก **New repository secret**
-3. สร้าง 2 secrets:
+2. คลิก **New repository secret** แล้วสร้าง 2 ตัว:
    - `TUNWALAI_USERNAME` = email ที่ใช้ login
    - `TUNWALAI_PASSWORD` = password
 
-### 3. เปิดใช้งาน GitHub Actions
-
+### 3. เปิดใช้งาน Actions
 1. ไปที่แท็บ **Actions**
 2. คลิก **I understand my workflows, go ahead and enable them**
 
-### 4. ทดสอบรัน
-
+### 4. ทดสอบ
 1. ไปที่ **Actions** → **Auto Promote & Update**
-2. คลิก **Run workflow** → เลือก branch **main** → **Run workflow**
-3. รอสักครู่แล้วดู log
+2. คลิก **Run workflow** → **Run workflow**
+3. ดู log ว่าทำงานสำเร็จหรือไม่
 
 ## ตารางเวลา
 
-Bot รันทุก 30 นาที (48 ครั้ง/วัน)
+รันทุก 1 ชั่วโมง (24 ครั้ง/วัน)
 
 ## การใช้ทรัพยากร
 
-- GitHub Actions Free: **2,000 นาที/เดือน**
-- Bot ใช้: **~1,440 นาที/เดือน** (72% ของ quota)
-- แต่ละครั้งใช้เวลา: **30-60 วินาที**
+- GitHub Actions Free: 2,000 นาที/เดือน
+- Bot ใช้: ~120 นาที/เดือน (6% ของ quota)
+- แต่ละครั้งใช้เวลา: 2-3 นาที
+
+## เปลี่ยนความถี่
+
+แก้ไข `.github/workflows/auto-boost.yml`:
+
+```yaml
+schedule:
+  - cron: '19 * * * *'  # รันทุกชั่วโมงตรงนาทีที่ 19
+```
+
+ตัวอย่าง:
+- ทุก 2 ชั่วโมง: `'0 */2 * * *'`
+- ทุก 30 นาที: `'*/30 * * * *'`
 
 ## แก้ปัญหา
 
-### ดู Log
-1. **Actions** → คลิก workflow run → **promote** → **Run bot**
+**ดู Log**: Actions → คลิก workflow run → promote → Run bot
 
-### ปัญหาที่พบบ่อย
+**Login ไม่สำเร็จ**: ตรวจสอบ username/password ใน Secrets
 
-**Login ไม่สำเร็จ**
-- ตรวจสอบ username/password ใน Secrets
-
-**Element not found**
-- เว็บอาจเปลี่ยน HTML → ต้องแก้ selector ใน `bot.py`
-
-**Timeout**
-- เว็บช้า → Bot รอได้สูงสุด 60 วินาที ต่อ element
-
-## ปรับแต่ง
-
-### เปลี่ยนความถี่การรัน
-
-แก้ไข `.github/workflows/auto-boost.yml`:
-```yaml
-schedule:
-  - cron: '*/30 * * * *'  # ทุก 30 นาที
-```
-
-ตัวอย่าง:
-- ทุก 1 ชั่วโมง: `'0 * * * *'`
-- ทุก 2 ชั่วโมง: `'0 */2 * * *'`
-- ทุก 15 นาที: `'*/15 * * * *'`
-
-### แก้ Selector (ถ้าเว็บเปลี่ยน)
-
-1. เปิด DevTools (F12) บนหน้าเว็บ
-2. คลิกขวา element → Inspect
-3. ดู `id`, `class`, หรือ attributes อื่นๆ
-4. แก้ไขใน `bot.py`
-
-ตัวอย่าง:
-```python
-# หาด้วย ID
-driver.find_element(By.ID, "btnPromote")
-
-# หาด้วย CSS Selector
-driver.find_element(By.CSS_SELECTOR, "button.btn-save")
-
-# หาด้วย Class
-driver.find_element(By.CLASS_NAME, "btn-primary")
-```
-
-## โครงสร้างโปรเจกต์
-
-```
-.
-├── bot.py                  # สคริปต์หลัก
-├── requirements.txt        # Python dependencies
-├── README.md              # คู่มือ
-└── .github/workflows/
-    └── auto-boost.yml     # GitHub Actions config
-```
-
-## Dependencies
-
-- Python 3.9+
-- Selenium 4.15.0
-- Chrome WebDriver (ติดตั้งอัตโนมัติใน GitHub Actions)
+**Element not found**: เว็บเปลี่ยน HTML → แก้ selector ใน `bot.py`

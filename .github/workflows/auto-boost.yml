@@ -2,7 +2,7 @@ name: Auto Promote & Update
 
 on:
   schedule:
-    - cron: '*/30 * * * *'  # รันทุก 30 นาที
+    - cron: '19 * * * *'  # รันทุกชั่วโมงตรงนาทีที่ 19
   workflow_dispatch:  # สามารถรันด้วยมือได้
 
 jobs:

@@ -1,5 +1,5 @@
-# Tunwalai Auto Promote Bot
-# สคริปต์สำหรับกดปุ่มโปรโมตอัตโนมัติ
+# Tunwalai Auto Boost Bot
+# สคริปต์สำหรับกดปุ่ม Boost อัตโนมัติ + แก้ไขบันทึกเพื่อขึ้น feed อัปเดตล่าสุด
 
 import os
 import sys
@@ -33,7 +33,7 @@ EDIT_URL = "https://www.tunwalai.com/story/838611/edit"
 driver = None
 
 try:
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] เริ่มต้น Tunwalai Auto Promote Bot")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] เริ่มต้น Tunwalai Auto Boost Bot")
     
     # ตั้งค่า Chrome options
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังตั้งค่า Chrome headless mode...")
@@ -119,26 +119,26 @@ try:
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {story_delay} วินาที...")
         time.sleep(story_delay)
 
-    # หาปุ่มโปรโมต
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังตรวจสอบสถานะปุ่มโปรโมต...")
+    # หาปุ่ม Promote
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังตรวจสอบสถานะปุ่ม Promote...")
     
     # รอสั้นๆ (3-5 วินาที) เพื่อให้ดูเป็นธรรมชาติ
     check_delay = random.randint(3, 5)
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {check_delay} วินาที...")
     time.sleep(check_delay)
     
-    # ใช้ WebDriverWait รอปุ่มโปรโมต (สูงสุด 60 วินาที)
+    # ใช้ WebDriverWait รอปุ่ม Promote (สูงสุด 60 วินาที)
     wait = WebDriverWait(driver, 60)
     promote_button = wait.until(EC.presence_of_element_located((By.ID, "btnPromote")))
 
     # เช็คว่าปุ่มมี attribute "disabled" หรือไม่
     if promote_button.get_attribute("disabled"):
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] สถานะปุ่ม: อยู่ใน cooldown (ไม่สามารถกดได้)")
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ข้ามการโปรโมตครั้งนี้")
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ข้ามการ Promote ครั้งนี้")
     else:
         # คลิกปุ่ม
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] สถานะปุ่ม: พร้อมใช้งาน (สามารถกดได้)")
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกดปุ่มโปรโมต...")
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกดปุ่ม Promote...")
         
         # ลองคลิกด้วย JavaScript ถ้าคลิกปกติไม่ได้
         try:
@@ -155,22 +155,22 @@ try:
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {promote_delay} วินาที...")
         time.sleep(promote_delay)
 
-        # ตรวจสอบว่าโปรโมตสำเร็จหรือไม่ โดยเช็คว่าปุ่มกลับมาเป็น disabled
+        # ตรวจสอบว่า Promote สำเร็จหรือไม่ โดยเช็คว่าปุ่มกลับมาเป็น disabled
         try:
             promote_button_after = driver.find_element(By.ID, "btnPromote")
             if promote_button_after.get_attribute("disabled"):
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ ยืนยัน: ปุ่มกลับมาเป็น disabled - โปรโมตสำเร็จแน่นอน!")
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ ยืนยัน: ปุ่มกลับมาเป็น disabled - Promote สำเร็จแน่นอน!")
             else:
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: ปุ่มยังไม่ disabled - อาจโปรโมตไม่สำเร็จ")
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: ปุ่มยังไม่ disabled - อาจ Promote ไม่สำเร็จ")
         except:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ไม่สามารถตรวจสอบสถานะปุ่มหลังโปรโมต")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ไม่สามารถตรวจสอบสถานะปุ่มหลัง Promote")
 
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] โปรโมตสำเร็จ!")
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Promote สำเร็จ!")
     
     # ========================================
-    # ส่วนที่ 2: แก้ไข + บันทึก (2 รอบ) เพื่อขึ้น feed อัปเดตล่าสุด
+    # ส่วนที่ 2: แก้ไข + บันทึก (2 รอบ) เพื่อขึ้น feed "อัปเดตล่าสุด"
     # ========================================
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] เริ่มกระบวนการแก้ไข + บันทึก (2 รอบ)...")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] เริ่มกระบวนการแก้ไข + บันทึก (2 รอบ) เพื่อขึ้น feed อัปเดตล่าสุด...")
     
     for round_num in range(1, 3):  # ทำ 2 รอบ
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] === รอบที่ {round_num} ===")
@@ -251,7 +251,7 @@ try:
             if round_num == 2:
                 print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: รอบที่ 2 ล้มเหลว แต่รอบที่ 1 อาจสำเร็จแล้ว")
     
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ เสร็จสิ้นการแก้ไข + บันทึก 2 รอบ!")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ เสร็จสิ้นกระบวนการ Boost ทั้งหมด (Promote + Edit + Save 2 รอบ)!")
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] นิยายควรขึ้น feed อัปเดตล่าสุดแล้ว")
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] จบการทำงาน - สำเร็จ")
     sys.exit(0)
