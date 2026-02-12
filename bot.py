@@ -134,8 +134,8 @@ try:
     chrome_options.add_argument('--disable-dev-shm-usage')
 
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Opening Chrome browser (undetected mode)...")
-    # Let setup-chrome handle chromedriver installation to ensure version match
-    driver = uc.Chrome(options=chrome_options, use_subprocess=False, driver_executable_path=None)
+    # Pin to version 144 to match Chrome and ChromeDriver
+    driver = uc.Chrome(options=chrome_options, use_subprocess=False, version_main=144)
     driver.implicitly_wait(10)
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Browser opened successfully")
 
