@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "name": "Multi-Account Push Enforcer",
+  "description": "Automatically push to both shamizen and xystrn accounts when user says \"push\" or \"save and push\" without specifying a single account",
+  "version": "1",
+  "when": {
+    "type": "promptSubmit"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "CRITICAL: When user says \"push\" or \"save and push\" WITHOUT specifying single account (e.g., \"shamizen only\", \"xystrn only\"):\n\n→ Follow #[[file:.kiro/steering/multi-account-push.md]] completely\n→ Push to BOTH accounts automatically (shamizen + xystrn)\n→ No confirmation needed\n\nOtherwise: ignore this hook\n"
+  },
+  "workspaceFolderName": "tunwalai-auto-boost ",
+  "shortName": "multi-account-push-enforcer"
+}
