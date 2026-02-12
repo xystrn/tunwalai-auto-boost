@@ -8,6 +8,7 @@ on:
 jobs:
   promote:
     runs-on: ubuntu-latest
+    timeout-minutes: 10  # ถ้าเกิน 10 นาที ให้หยุดทันที (ป้องกันเสียเวลาเปล่าๆ)
     
     steps:
       - name: Checkout code

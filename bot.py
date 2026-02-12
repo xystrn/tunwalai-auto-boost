@@ -67,55 +67,66 @@ try:
     
     # ถ้ายังไม่ได้ login ให้ไป login
     if not already_logged_in:
-        # Navigate ไปยัง LOGIN_URL
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังเข้าหน้า login...")
-        driver.get(LOGIN_URL)
+        try:
+            # Navigate ไปยัง LOGIN_URL
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังเข้าหน้า login...")
+            driver.get(LOGIN_URL)
 
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกรอก username...")
-        wait = WebDriverWait(driver, 60)
-        username_field = wait.until(EC.presence_of_element_located((By.ID, "UserName")))
-        username_field.send_keys(USERNAME)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกรอก username...")
+            wait = WebDriverWait(driver, 60)
+            username_field = wait.until(EC.presence_of_element_located((By.ID, "UserName")))
+            username_field.send_keys(USERNAME)
 
-        # หา element password และกรอกค่า
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกรอก password...")
-        password_field = wait.until(EC.presence_of_element_located((By.ID, "Password")))
-        password_field.send_keys(PASSWORD)
+            # หา element password และกรอกค่า
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกรอก password...")
+            password_field = wait.until(EC.presence_of_element_located((By.ID, "Password")))
+            password_field.send_keys(PASSWORD)
 
-        # หาปุ่ม submit และคลิก
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลัง submit form...")
-        submit_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']")))
-        submit_button.click()
+            # หาปุ่ม submit และคลิก
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลัง submit form...")
+            submit_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[type='submit']")))
+            driver.execute_script("arguments[0].click();", submit_button)
 
-        # รอสั้นๆ หลัง submit (3-5 วินาที)
-        login_delay = random.randint(3, 5)
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {login_delay} วินาที...")
-        time.sleep(login_delay)
+            # รอสั้นๆ หลัง submit (3-5 วินาที)
+            login_delay = random.randint(3, 5)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {login_delay} วินาที...")
+            time.sleep(login_delay)
 
-        # ตรวจสอบว่า login สำเร็จหรือไม่ โดยเช็ค URL หรือหา element ที่แสดงว่า login แล้ว
-        current_url = driver.current_url
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] URL ปัจจุบัน: {current_url}")
-        
-        # ถ้ายังอยู่หน้า login แสดงว่า login ไม่สำเร็จ
-        if "ServiceLogin" in current_url or "login" in current_url.lower():
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Login ไม่สำเร็จ - ยังอยู่หน้า login")
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กรุณาตรวจสอบ username/password ใน GitHub Secrets")
+            # ตรวจสอบว่า login สำเร็จหรือไม่ โดยเช็ค URL หรือหา element ที่แสดงว่า login แล้ว
+            current_url = driver.current_url
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] URL ปัจจุบัน: {current_url}")
+            
+            # ถ้ายังอยู่หน้า login แสดงว่า login ไม่สำเร็จ
+            if "ServiceLogin" in current_url or "login" in current_url.lower():
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Login ไม่สำเร็จ - ยังอยู่หน้า login")
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กรุณาตรวจสอบ username/password ใน GitHub Secrets")
+                sys.exit(1)
+
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Login สำเร็จ")
+
+            # นำทางไปหน้านิยาย
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังเข้าหน้านิยาย...")
+            driver.get(STORY_URL)
+
+            # ตรวจสอบว่าอยู่หน้านิยายจริงๆ
+            current_url = driver.current_url
+            if "story/838611" not in current_url:
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: ไม่ได้อยู่หน้านิยาย - URL: {current_url}")
+            
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] โหลดหน้านิยายสำเร็จ")
+            
+        except TimeoutException as e:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: Login timeout - หน้า login อาจเปลี่ยนแปลง")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รายละเอียด: {e}")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ไม่สามารถทำงานต่อได้ - ต้อง login ก่อน")
             sys.exit(1)
-
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Login สำเร็จ")
-
-        # นำทางไปหน้านิยาย
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังเข้าหน้านิยาย...")
-        driver.get(STORY_URL)
-
-        # ตรวจสอบว่าอยู่หน้านิยายจริงๆ
-        current_url = driver.current_url
-        if "story/838611" not in current_url:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: ไม่ได้อยู่หน้านิยาย - URL: {current_url}")
-        
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] โหลดหน้านิยายสำเร็จ")
+        except Exception as e:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ERROR: เกิดข้อผิดพลาดระหว่าง login - {e}")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ไม่สามารถทำงานต่อได้ - ต้อง login ก่อน")
+            sys.exit(1)
     else:
-        # ถ้า login อยู่แล้ว รอสั้นๆ (3-5 วินาที)
-        story_delay = random.randint(3, 5)
+        # ถ้า login อยู่แล้ว รอสั้นๆ (1-5 วินาที)
+        story_delay = random.randint(1, 5)
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] รอ {story_delay} วินาที...")
         time.sleep(story_delay)
 
