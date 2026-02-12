@@ -136,19 +136,10 @@ try:
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] สถานะปุ่ม: อยู่ใน cooldown (ไม่สามารถกดได้)")
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ข้ามการ Promote ครั้งนี้")
     else:
-        # คลิกปุ่ม
+        # คลิกปุ่มด้วย JavaScript (เร็วและแน่นอน)
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] สถานะปุ่ม: พร้อมใช้งาน (สามารถกดได้)")
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกดปุ่ม Promote...")
-        
-        # ลองคลิกด้วย JavaScript ถ้าคลิกปกติไม่ได้
-        try:
-            # รอให้ปุ่มคลิกได้
-            wait.until(EC.element_to_be_clickable((By.ID, "btnPromote")))
-            promote_button.click()
-        except:
-            # ถ้าคลิกปกติไม่ได้ ใช้ JavaScript click
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ใช้ JavaScript click...")
-            driver.execute_script("arguments[0].click();", promote_button)
+        driver.execute_script("arguments[0].click();", promote_button)
 
         # รอสั้นๆ หลังกดปุ่ม (3-5 วินาที)
         promote_delay = random.randint(3, 5)
@@ -189,16 +180,10 @@ try:
         wait = WebDriverWait(driver, 60)
         
         try:
-            # ลองหาปุ่มบันทึก
-            save_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.btn-save")))
+            # หาปุ่มบันทึก
+            save_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button.btn-save")))
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกดปุ่มบันทึก...")
-            
-            # ลองคลิกปกติ ถ้าไม่ได้ใช้ JavaScript
-            try:
-                save_button.click()
-            except:
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ใช้ JavaScript click...")
-                driver.execute_script("arguments[0].click();", save_button)
+            driver.execute_script("arguments[0].click();", save_button)
             
             # รอสั้นๆ ให้ popup ขึ้นมา (2-3 วินาที)
             popup_delay = random.randint(2, 3)
@@ -208,14 +193,9 @@ try:
             # หาปุ่ม "ตกลง" ใน popup และคลิก
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังหาปุ่มตกลงใน popup...")
             try:
-                confirm_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.btn-submit-form")))
+                confirm_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button.btn-submit-form")))
                 print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] กำลังกดปุ่มตกลง...")
-                
-                try:
-                    confirm_button.click()
-                except:
-                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ใช้ JavaScript click...")
-                    driver.execute_script("arguments[0].click();", confirm_button)
+                driver.execute_script("arguments[0].click();", confirm_button)
                 
                 print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✓ กดปุ่มตกลงสำเร็จ!")
                 
