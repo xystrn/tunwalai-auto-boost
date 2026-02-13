@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Multi-Account Push Guide",
+  "description": "Reminds agent about multi-account push workflow with flexible implementation approach",
+  "version": "1",
+  "when": {
+    "type": "promptSubmit"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "MULTI-ACCOUNT PUSH WORKFLOW:\n\nThis repo syncs to TWO GitHub accounts with DIFFERENT cron schedules to maximize update frequency without hitting GitHub Actions free tier quota limits.\n\nACCOUNTS:\n- shamizen (origin) → cron: '19 * * * *'\n- xystrn (xystrn) → cron: '49 * * * *'\n\nWHY? Staggering cron 30 minutes apart = updates twice per hour instead of once, without exceeding quota.\n\nDEFAULT = PUSH TO BOTH:\nWhen user says \"push\" or \"save and push\" WITHOUT specifying account:\n\n1. Push to shamizen:\n   - Check cron in .github/workflows/auto-boost.yml\n   - If cron ≠ '19 * * * *' → Change it to '19 * * * *'\n   - git add, commit, push to origin main\n\n2. Push to xystrn:\n   - Check cron in .github/workflows/auto-boost.yml\n   - If cron ≠ '49 * * * *' → Change it to '49 * * * *'\n   - git add, commit, push to xystrn main --force\n\nSINGLE ACCOUNT (only if user explicitly says \"only\"):\n- shamizen only: Set cron to '19 * * * *', push to origin\n- xystrn only: Set cron to '49 * * * *', push to xystrn --force\n\nRULES:\n✓ ALWAYS check and update cron BEFORE every push\n✓ Default = push BOTH (don't ask, just do it)\n✓ Only push single account if user explicitly says \"only\"\n✓ The cron difference is KEY to avoiding quota limits\n\nIf user mentioned push/save/commit/github, apply this workflow now."
+  }
+}
