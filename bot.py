@@ -52,11 +52,11 @@ def process_story(driver, story_id, story_index, total_stories):
     try:
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Navigating to story page...")
         driver.get(STORY_URL)
-        time.sleep(random.randint(1, 3))
+        time.sleep(1)
 
         # Step 1: Click Promote button
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Checking Promote button...")
-        time.sleep(random.randint(2, 4))
+        time.sleep(1)
         
         wait = WebDriverWait(driver, 30)
         promote_button = wait.until(EC.presence_of_element_located((By.ID, "btnPromote")))
@@ -66,7 +66,7 @@ def process_story(driver, story_id, story_index, total_stories):
         else:
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Clicking Promote button...")
             driver.execute_script("arguments[0].click();", promote_button)
-            time.sleep(random.randint(2, 4))
+            time.sleep(1)
 
             try:
                 promote_button_after = driver.find_element(By.ID, "btnPromote")
@@ -85,13 +85,13 @@ def process_story(driver, story_id, story_index, total_stories):
             
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Navigating to edit page...")
             driver.get(EDIT_URL)
-            time.sleep(random.randint(2, 4))
+            time.sleep(1)
             
             try:
                 save_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button.btn-save")))
                 print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Clicking Save button...")
                 driver.execute_script("arguments[0].click();", save_button)
-                time.sleep(random.randint(1, 2))
+                time.sleep(1)
                 
                 try:
                     confirm_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button.btn-submit-form")))
@@ -105,7 +105,7 @@ def process_story(driver, story_id, story_index, total_stories):
                     except TimeoutException:
                         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: Timeout - still on edit page")
                     
-                    time.sleep(random.randint(1, 2))
+                    time.sleep(1)
                     
                 except:
                     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] WARNING: Confirm button not found")
@@ -174,7 +174,7 @@ try:
             submit_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[type='submit']")))
             driver.execute_script("arguments[0].click();", submit_button)
 
-            time.sleep(random.randint(3, 5))
+            time.sleep(1)
 
             current_url = driver.current_url
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Current URL: {current_url}")
@@ -205,9 +205,8 @@ try:
             fail_count += 1
         
         if index < len(STORY_IDS):
-            between_delay = random.randint(2, 4)
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Waiting {between_delay}s before next story...")
-            time.sleep(between_delay)
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Waiting 1s before next story...")
+            time.sleep(1)
     
     # Summary
     print(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ========================================")
