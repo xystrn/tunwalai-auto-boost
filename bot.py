@@ -132,10 +132,19 @@ try:
     chrome_options.add_argument('--headless=new')
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--window-size=1920,1080')
 
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Opening Chrome browser (undetected mode)...")
     # Pin to version 144 to match Chrome and ChromeDriver
-    driver = uc.Chrome(options=chrome_options, use_subprocess=False, version_main=144)
+    # headless=True applies additional stealth patches for better detection avoidance
+    driver = uc.Chrome(
+        options=chrome_options, 
+        headless=True,
+        use_subprocess=False, 
+        version_main=144
+    )
     driver.implicitly_wait(10)
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Browser opened successfully")
 

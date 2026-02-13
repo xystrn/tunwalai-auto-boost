@@ -88,3 +88,17 @@ Examples:
 - If one story fails, others continue processing
 - Random delays (1-4s) make it look natural
 - Works in headless Chrome (no GUI needed)
+- Uses undetected-chromedriver with enhanced stealth patches to avoid bot detection
+
+## Technical Details
+
+### Anti-Detection Features
+
+The bot uses `undetected-chromedriver` with enhanced stealth configuration:
+
+- **Headless stealth mode**: `headless=True` parameter applies additional JavaScript patches to hide headless detection
+- **Automation hiding**: `--disable-blink-features=AutomationControlled` removes automation indicators
+- **Version pinning**: Locked to Chrome 144 for stability and compatibility
+- **Standard window size**: 1920x1080 to appear as normal desktop browser
+
+These features help bypass common bot detection systems like Cloudflare, DataDome, and Imperva.
